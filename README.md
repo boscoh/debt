@@ -1,17 +1,49 @@
-### Keen Debt Analysis
+# Data Visualisation of National Debt
 
--   BIS national stats
-    -   https://www.bis.org/statistics/about_credit_stats.htm?m=6%7C380
-    -   totcredit.xls
--   https://privatedebtproject.org/pdp/view-articles.php?Are-We-Facing-a-Global-Lost-Decade-14
-    plot nicely - rise of private debt as printing money
--   https://countryeconomy.com/gdp/australia?year=2019
--   https://www.macrotrends.net/countries/AUS/australia/gdp-growth-rate
--   https://fred.stlouisfed.org/series/AUSGDPNQDSMEI
--   https://www.rba.gov.au/statistics/frequency/occ-paper-8.html#section_5
--   RBA GDP data
-    -   https://www.rba.gov.au/statistics/tables/xls/h01hist.xls
-    -   5-1a-b.xls
--   https://data.worldbank.org/indicator/FS.AST.PRVT.GD.ZS?locations=AU
-    -   API_NY.GDP.MKTP.CD_DS_en_excel_v2_1740133
--   https://www.macrotrends.net/countries/AUS/australia/gdp-growth-rate
+Running visualization <https://boscoh.com/debt>
+
+## Quick Start
+
+    npm install
+
+Run dev server
+
+    npm run dev
+
+Build production SPA in `dist`:
+
+    npm run build
+
+## Refresh data
+
+The data is pulled in from the Bank of International Settlement:
+
+    node fetch-bis-debt-data.js
+
+This will build `src/countries.data.json` which has all the country data 
+JSON format.
+
+The source URL is
+<https://www.bis.org/statistics/about_credit_stats.htm?m=6%7C380>.
+
+## App architecture
+
+- Vue 3 framework
+- plots with chart.js
+- UI and utility CSS from Bootstrap 5
+- currency from currency-symbol-map & country-codes-list 
+
+## Data analysis
+
+Debt, GDP and Debt percentages are taken from the Bank of International 
+Settlement. Debt is broken up into Public and Private debt. Household
+debt is considered one part of the Private debt, and Commercial Debt
+is calculated as the remainder.
+
+Changes in Debt, GDP etc. are calculated from this data.
+
+## Data analysis
+
+Javascript has sufficiently tools for data-analysis from Excel spreadsheet
+sources, where the resultant JSON slots nicely into a front-end framework.
+
