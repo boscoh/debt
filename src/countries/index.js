@@ -9,9 +9,11 @@ function getCurrency(country) {
     for (let [name, code] of _.toPairs(codeByName)) {
         if (_.includes(name, country)) {
             return getSymbolFromCurrency(code)
+        } else {
+            return code
         }
     }
-    return '$'
+    return 'CUR'
 }
 
 function makeCountryPageLayout(country) {
