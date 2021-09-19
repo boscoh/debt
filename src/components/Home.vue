@@ -2,14 +2,10 @@
 .d-flex.flex-row(:key="renderHook").flex-grow-1
     .px-4.pb-4.flex-grow-1.d-flex.flex-column.text-start.overflow-auto
         h1.m-0 {{ title }}
-        div(v-for="(chart, i) of charts" style="width:100%")
+        .w-100(v-for="(chart, i) of charts" :key="i")
             h4 {{ chart.title }}
             div(v-html="chart.html")
-            vue3-chart-js(
-                :key="i"
-                style="width:100%"
-                v-bind="chart"
-            )
+            vue3-chart-js.w-100(v-bind="chart")
     .d-flex.flex-column.border.p-3.m-4(style="width: 10em")
         .form-check.text-start(v-for="s in checkBoxes")
             input.form-check-input(
@@ -98,6 +94,7 @@ const selectedCountries = [
     'Belgium',
     'Canada',
     'China',
+    'Denmark',
     'France',
     'Germany',
     'Greece',
@@ -106,7 +103,6 @@ const selectedCountries = [
     'Japan',
     'Korea',
     'New Zealand',
-    'Spain',
     'United Kingdom',
     'United States',
 ]
@@ -141,12 +137,12 @@ export default {
                 makeComparisonChart(
                     selectedCountries,
                     'householdPercent',
-                    'Household Debt'
+                    'Household (mostly Housing) Debt'
                 ),
                 makeComparisonChart(
                     selectedCountries,
-                    'privateDebtPercent',
-                    'Private Debt'
+                    'commercialDebtPercent',
+                    'Commercial Debt'
                 ),
                 makeComparisonChart(
                     selectedCountries,
@@ -155,8 +151,8 @@ export default {
                 ),
                 makeComparisonChart(
                     selectedCountries,
-                    'commercialDebtPercent',
-                    'Commercial Debt'
+                    'privateDebtPercent',
+                    'Private Debt (Commercial & Household)'
                 ),
                 makeComparisonChart(
                     selectedCountries,

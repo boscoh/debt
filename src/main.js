@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import * as VueRouter from 'vue-router'
-import PopModel from './components/Country.vue'
+import Country from './components/Country.vue'
 import Home from './components/Home.vue'
-import models from './countries/index'
+import countryPageLayouts from './countries/index'
 
 const routes = [
     {
@@ -13,12 +13,12 @@ const routes = [
     },
 ]
 
-for (let m of models) {
+for (let c of countryPageLayouts) {
     routes.push({
-        path: m.path,
-        name: m.name,
-        component: PopModel,
-        props: { name: m.name },
+        path: c.path,
+        name: c.name,
+        component: Country,
+        props: { name: c.name },
     })
 }
 

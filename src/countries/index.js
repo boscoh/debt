@@ -2,15 +2,13 @@ import _ from 'lodash'
 import dataByCountry from './data.json'
 import countryCodes from 'country-codes-list'
 import getSymbolFromCurrency from 'currency-symbol-map'
+
 const codeByName = countryCodes.customList('countryNameEn', '{currencyCode}')
-console.log(codeByName)
 
 function getCurrency(country) {
     for (let [name, code] of _.toPairs(codeByName)) {
         if (_.includes(name, country)) {
-            let symbol = getSymbolFromCurrency(code)
-            console.log(name, country, code, symbol)
-            return symbol
+            return getSymbolFromCurrency(code)
         }
     }
     return '$'
@@ -37,13 +35,13 @@ function makeCountryPageLayout(country) {
             {
                 title: `Household/Commercial/Public Debt (${currency})`,
                 markdown: '',
-                keys: ['commercialDebt', 'householdDebt', 'publicDebt', 'gdp'],
+                keys: ['householdDebt', 'commercialDebt', 'publicDebt', 'gdp'],
                 ymin: 0,
                 xlabel: 'Year',
                 ylabel: currency,
             },
             {
-                title: '%Credit = Δ%Debt (%GDP)',
+                title: 'Credit = ΔDebt (%GDP)',
                 // language=markdown
                 markdown: ``,
                 keys: ['creditPercent'],
@@ -83,7 +81,7 @@ function makeCountryPageLayout(country) {
                 ylabel: currency,
             },
             {
-                title: `Keen Growth = ΔGDP + ΔDebt (${currency})`,
+                title: `Keen Growth (ΔGDP + ΔDebt) (${currency})`,
                 markdown: '',
                 keys: ['keenGrowth'],
                 isUp: true,
