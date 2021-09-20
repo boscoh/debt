@@ -21,7 +21,7 @@ The data is pulled in from the Bank of International Settlement:
     node fetch-bis-debt-data.js
 
 This will build `src/countries.data.json` which has all the country data 
-JSON format.
+in JSON format.
 
 The source URL is
 <https://www.bis.org/statistics/about_credit_stats.htm?m=6%7C380>.
@@ -44,6 +44,6 @@ Changes in Debt, GDP etc. are calculated from this data.
 
 ## Data analysis
 
-Javascript has sufficiently tools for data-analysis from Excel spreadsheet
+Javascript has sufficiently good tools for data-analysis from Excel spreadsheet
 sources, where the resultant JSON slots nicely into a front-end framework.
 
