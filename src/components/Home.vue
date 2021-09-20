@@ -81,8 +81,8 @@ function makeComparisonChart (countries, property, title) {
         times: times,
         dataByKey: dataByKey,
         ymin: 0,
-        xmin: 1985,
-        xmax: new Date().getFullYear(),
+        xmin: 1990,
+        xmax: _.max(times),
         xlabel: 'Year',
         ylabel: '%',
         renderHook: random(),
@@ -164,6 +164,11 @@ export default {
                 let times = chart.times
                 let dataByKey = chart.dataByKey
                 assignTimeSeriesDataToChart(chart, times, dataByKey)
+                let dataset = _.find(chart.data.datasets, {label: 'GDP'})
+                dataset.borderWidth = 4
+                // dataset.fill = 'origin'
+                dataset.borderColor = '#333333' + '33'
+                // dataset.backgroundColor = dataset.borderColor + '33'
                 chart.options.plugins.legend.position = 'right'
             }
             this.renderHook = random()

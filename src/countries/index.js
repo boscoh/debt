@@ -8,9 +8,9 @@ const codeByName = countryCodes.customList('countryNameEn', '{currencyCode}')
 function getCurrency(country) {
     for (let [name, code] of _.toPairs(codeByName)) {
         if (_.includes(name, country)) {
-            return getSymbolFromCurrency(code)
-        } else {
-            return code
+            let currency = getSymbolFromCurrency(code)
+            console.log(`${country} - ${code} - ${currency}`)
+            return currency
         }
     }
     return 'CUR'
