@@ -136,7 +136,7 @@ export default {
             this.charts = [
                 makeComparisonChart(
                     selectedCountries,
-                    'householdPercent',
+                    'householdDebtPercent',
                     'Household (mostly Housing) Debt'
                 ),
                 makeComparisonChart(
@@ -161,15 +161,17 @@ export default {
                 ),
             ]
             for (let chart of this.charts) {
+                chart.options.plugins.legend.position = 'right'
+
                 let times = chart.times
                 let dataByKey = chart.dataByKey
                 assignTimeSeriesDataToChart(chart, times, dataByKey)
+
                 let dataset = _.find(chart.data.datasets, {label: 'GDP'})
-                dataset.borderWidth = 4
-                // dataset.fill = 'origin'
+                dataset.borderWidth = 8
                 dataset.borderColor = '#333333' + '33'
+                // dataset.fill = 'origin'
                 // dataset.backgroundColor = dataset.borderColor + '33'
-                chart.options.plugins.legend.position = 'right'
             }
             this.renderHook = random()
         },

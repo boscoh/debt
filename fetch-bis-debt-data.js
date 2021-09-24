@@ -179,7 +179,8 @@ class BIS {
             r.privateDebtPercent,
             (a, b) => (a / b) * 100
         )
-        r.householdPercent = combine(
+        r.gdpPercent = _.map(r.times, t => 100)
+        r.householdDebtPercent = combine(
             r.householdDebt,
             r.gdp,
             (a, b) => (a / b) * 100

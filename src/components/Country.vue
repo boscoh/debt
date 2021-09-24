@@ -42,6 +42,15 @@ export default {
                     this.layout.times,
                     this.layout.dataByKey
                 )
+                console.log(_.cloneDeep(chart.data.datasets))
+                let dataset = _.find(chart.data.datasets, {label: 'Gdp Percent'})
+                if (dataset) {
+                    dataset.borderWidth = 0
+                    dataset.label = ''
+                    dataset.borderColor = '#AAAAAA'
+                    dataset.fill = 'origin'
+                    dataset.backgroundColor = dataset.borderColor + '33'
+                }
             }
         },
     },
