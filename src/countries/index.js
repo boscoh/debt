@@ -16,7 +16,7 @@ function getCurrency(country) {
     return 'CUR'
 }
 
-function makeCountryPageLayout(country) {
+function makeCountryLayout(country) {
     const currency = getCurrency(country)
     const dataByKey = _.cloneDeep(dataByCountry[country])
     const xmax = _.max(dataByKey.times)
@@ -39,6 +39,18 @@ function makeCountryPageLayout(country) {
                 ylabel: currency,
             },
             {
+                title: 'Debt Comparison (%GDP)',
+                markdown: ``,
+                keys: ['privateDebtPercent', 'publicDebtPercent', 'gdpPercent'],
+                isUp: false,
+                isSymmetryY: false,
+                xmin,
+                xmax,
+                ymin: 0,
+                xlabel: 'Year',
+                ylabel: '%',
+            },
+            {
                 title: `Household/Commercial/Public Debt (${currency})`,
                 markdown: '',
                 keys: ['householdDebt', 'commercialDebt', 'publicDebt', 'gdp'],
@@ -49,7 +61,7 @@ function makeCountryPageLayout(country) {
                 ylabel: currency,
             },
             {
-                title: 'Debt Comparison (%GDP)',
+                title: 'Household/Commercial/Public Comparison (%GDP)',
                 markdown: ``,
                 keys: ['householdDebtPercent', 'commercialDebtPercent', 'publicDebtPercent', 'gdpPercent'],
                 isUp: false,
@@ -111,4 +123,4 @@ function makeCountryPageLayout(country) {
     }
 }
 
-export default _.map(_.keys(dataByCountry), makeCountryPageLayout)
+export default _.map(_.keys(dataByCountry), makeCountryLayout)

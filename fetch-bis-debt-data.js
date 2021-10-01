@@ -195,6 +195,11 @@ class BIS {
             r.gdp,
             (a, b) => (a / b) * 100
         )
+        r.privateDebtPercent = combine(
+            r.privateDebt,
+            r.gdp,
+            (a, b) => (a / b) * 100
+        )
         r.gdpChange = diff(r.gdp)
         r.allDebtPercent = combine(
             r.privateDebtPercent,

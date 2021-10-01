@@ -18,7 +18,7 @@ import countryLayouts from '../countries/index'
 import { assignTimeSeriesDataToChart } from '../chartUtil'
 
 export default {
-    name: 'Country',
+    name: 'CountryCharts',
     components: { Vue3ChartJs },
     props: ['name'],
     data () {

@@ -1,5 +1,5 @@
 <template lang="pug">
-.d-flex.flex-row(:key="renderHook").flex-grow-1
+.d-flex.flex-row.flex-grow-1(:key="renderHook")
     .px-4.pb-4.flex-grow-1.d-flex.flex-column.text-start.overflow-auto
         h1.m-0 {{ title }}
         .w-100(v-for="(chart, i) of charts" :key="i")
@@ -13,8 +13,6 @@
             )
             .form-check-label {{ s.country }}
 </template>
-`
-`
 
 <script>
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -161,17 +159,15 @@ export default {
                 ),
             ]
             for (let chart of this.charts) {
-                chart.options.plugins.legend.position = 'right'
-
                 let times = chart.times
                 let dataByKey = chart.dataByKey
                 assignTimeSeriesDataToChart(chart, times, dataByKey)
 
+                chart.options.plugins.legend.position = 'right'
+
                 let dataset = _.find(chart.data.datasets, {label: 'GDP'})
                 dataset.borderWidth = 8
                 dataset.borderColor = '#333333' + '33'
-                // dataset.fill = 'origin'
-                // dataset.backgroundColor = dataset.borderColor + '33'
             }
             this.renderHook = random()
         },

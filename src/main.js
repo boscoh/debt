@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import * as VueRouter from 'vue-router'
-import Country from './components/Country.vue'
+import CountryCharts from './components/CountryCharts.vue'
 import Home from './components/Home.vue'
-import countryPageLayouts from './countries/index'
+import countryLayouts from './countries/index'
 
 const routes = [
     {
@@ -13,11 +13,11 @@ const routes = [
     },
 ]
 
-for (let c of countryPageLayouts) {
+for (let c of countryLayouts) {
     routes.push({
         path: c.path,
         name: c.name,
-        component: Country,
+        component: CountryCharts,
         props: { name: c.name },
     })
 }

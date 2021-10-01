@@ -9,7 +9,8 @@
             router-link.dropdown-item(
                 v-for="(item, i) in items"
                 :to="item.to"
-            ) {{ item.title }}
+            )
+                | {{ item.title }}
 </template>
 
 <script>
@@ -19,7 +20,6 @@ let items = [{ to: '/', title: 'Home' }]
 for (let m of models) {
     items.push({ to: m.path, title: m.name })
 }
-
 console.log(items)
 
 export default {
