@@ -27,10 +27,13 @@ function random () {
 }
 
 /**
- * @returns dict - {
- *     <country1>: [float|null]
- *     <country2>: [float|null]
- * }
+ * @param countries {string[]} list of countries to extract data
+ * @param property {string} name of property in dataByCountry to extract
+ * @param times {float[]} list of times that must be filled
+ * @returns {{
+ *      country1: [float|null],
+ *      country2: [float|null],
+ * }}
  */
 function getCountryProperty (countries, property, times) {
     let timeValueByCountry = {}
@@ -69,17 +72,13 @@ function makeGdpComparisonChart (countries, property, title) {
     }
     times = _.sortBy(_.uniq(times))
     let dataByKey = getCountryProperty(countries, property, times)
-    countries = _.sortBy(countries, country => -_.last(dataByKey[country]))
-    let finalCountries = []
-    for (let country of countries) {
-        finalCountries.push(country)
-    }
-    finalCountries.push('GDP')
+    let sortedCountries = _.sortBy(countries, country => -_.last(dataByKey[country]))
+    sortedCountries.push('GDP')
     dataByKey.GDP = _.map(times, t => 100)
     return {
         title: `${title} (%GDP)`,
         markdown: '',
-        keys: finalCountries,
+        keys: sortedCountries,
         times: times,
         dataByKey: dataByKey,
         ymin: 0,

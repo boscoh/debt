@@ -63,18 +63,18 @@ function expandValues (aList, n) {
  *    time: list<float> - year converted to decimal for quarterly series
  * }
  */
-async function getPopulationByCountry (xlsFname) {
+function getPopulationByCountry (xlsFname) {
     let xls = new SimpleXLS(xlsFname, 'Data')
+    let result = {}
     let countries = _.slice(xls.getColumn(0), 4)
-    let times = _.map(_.slice(xls.getRow(3), 4), _.parseInt)
-    let populationByCountry = {}
     for (let i = 0; i < countries.length; i += 1) {
         let country = countries[i]
         let values = _.slice(xls.getRow(i + 4), 4)
-        populationByCountry[country] = expandValues(values, 4)
+        result[country] = expandValues(values, 4)
     }
-    populationByCountry.times = expandValues(times, 4)
-    return populationByCountry
+    let times = _.map(_.slice(xls.getRow(3), 4), _.parseInt)
+    result.times = expandValues(times, 4)
+    return result
 }
 
 function convertDateStrToInt (s) {
@@ -139,9 +139,14 @@ function removeBlankValues (payload) {
     return result
 }
 
-class BIS extends SimpleXLS {
-    getHeaders () {
-        return _.map(_.range(1, this.nCol), iCol => this.getCell(iCol, 0))
+class BisXls extends SimpleXLS {
+    constructor(xlsFname) {
+        super(xlsFname, 'Quarterly Series')
+    }
+
+    getCountries () {
+        let headers = _.map(_.range(1, this.nCol), iCol => this.getCell(iCol, 0))
+        return _.uniq(_.map(headers, c => _.trim(c.split('-')[0])))
     }
 
     findIColInHeader (patterns) {
@@ -325,17 +330,11 @@ class BIS extends SimpleXLS {
     }
 }
 
-async function getDebtByCountry (xlsxFname) {
-    let bis = new BIS(xlsxFname, 'Quarterly Series')
-    let countries = _.map(bis.getHeaders(), c => _.trim(c.split('-')[0]))
+function getDebtByCountry (xlsxFname) {
+    let bis = new BisXls(xlsxFname)
     let result = {}
-    for (let country of _.sortBy(_.uniq(countries))) {
-        let x = bis.getCountry(country)
-        if (_.isEmpty(x)) {
-            console.log(`Skipping: couldn't find values for ${country}`)
-            continue
-        }
-        result[country] = x
+    for (let country of bis.getCountries()) {
+        result[country] = bis.getCountry(country)
     }
     return result
 }
@@ -379,7 +378,7 @@ async function run () {
         'https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel'
     const populationXls = './src/countries/worldbank.pop.xls'
     await downloadFile(populationUrl, populationXls)
-    const populationData = await getPopulationByCountry(populationXls)
+    const populationData = getPopulationByCountry(populationXls)
 
     const populationJson = './src/countries/population.json'
     fs.writeFileSync(populationJson, JSON.stringify(populationData))
@@ -388,7 +387,7 @@ async function run () {
     const debtUrl = 'https://www.bis.org/statistics/totcredit/totcredit.xlsx'
     const debtXlsx = './src/countries/totcredit.xlsx'
     await downloadFile(debtUrl, debtXlsx)
-    let debtData = await getDebtByCountry(debtXlsx)
+    let debtData = getDebtByCountry(debtXlsx)
     addPopulation(debtData, populationJson)
 
     const dataJson = './src/countries/data.json'
