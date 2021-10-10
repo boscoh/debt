@@ -26,6 +26,12 @@ function random () {
     return (Math.random() + 1).toString(36).substring(7)
 }
 
+/**
+ * @returns dict - {
+ *     <country1>: [float|null]
+ *     <country2>: [float|null]
+ * }
+ */
 function getCountryProperty (countries, property, times) {
     let timeValueByCountry = {}
 
@@ -92,20 +98,27 @@ function makeUsdComparisonChart (countries, property, title) {
     }
     times = _.sortBy(_.uniq(times))
     let dataByKey = getCountryProperty(countries, property, times)
-    countries = _.sortBy(countries, country => -_.last(dataByKey[country]))
-    let finalCountries = []
-    for (let country of countries) {
-        finalCountries.push(country)
+
+    function doesTimeHaveValues(iTime) {
+        return _.some(countries, c => !_.isNil(dataByKey[c][iTime]))
     }
+    let iTime = times.length - 1
+    while (!doesTimeHaveValues(iTime)) {
+        iTime -= 1
+    }
+    let xmax = times[iTime]
+
+    let sortedCountries = _.sortBy(countries, c => -dataByKey[c][iTime])
+
     return {
         title: `${title}`,
         markdown: '',
-        keys: finalCountries,
+        keys: sortedCountries,
         times: times,
         dataByKey: dataByKey,
         ymin: 0,
         xmin: 1990,
-        xmax: _.max(times),
+        xmax: xmax,
         xlabel: 'Year',
         ylabel: 'USD',
         renderHook: random(),
@@ -202,6 +215,16 @@ export default {
                     selectedCountries,
                     'publicDebtUsd',
                     'Public Debt in USD'
+                ),
+                makeUsdComparisonChart(
+                    selectedCountries,
+                    'gdpUsd',
+                    'GDP in USD'
+                ),
+                makeUsdComparisonChart(
+                    selectedCountries,
+                    'gdpPerCapitaUsd',
+                    'GDP per Capita in USD'
                 ),
             ]
             for (let chart of this.charts) {

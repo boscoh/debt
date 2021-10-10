@@ -296,6 +296,11 @@ class BIS extends SimpleXLS {
             r.privateDebtPercent,
             (a, b) => (a / b) * 100
         )
+        r.gdpUsd = combine(
+            r.privateDebtUsd,
+            r.privateDebtPercent,
+            (a, b) => (a / b) * 100
+        )
         r.gdpPercent = _.map(r.times, t => 100)
         r.commercialDebtPercent = combine(
             r.commercialDebt,
@@ -361,6 +366,11 @@ function addPopulation (dataByCountry, jsonFname) {
             (a, b) => a / b
         )
         countryData.gdpChangePerCapita = diff(countryData.gdpPerCapita)
+        countryData.gdpPerCapitaUsd = combine(
+            countryData.gdpUsd,
+            countryData.population,
+            (a, b) => a / b
+        )
     }
 }
 
