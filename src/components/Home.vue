@@ -56,7 +56,7 @@ function getCountryProperty (countries, property, times) {
     return dataByKey
 }
 
-function makeComparisonChart (countries, property, title) {
+function makeGdpComparisonChart (countries, property, title) {
     let times = []
     for (let country of countries) {
         times = _.concat(times, dataByCountry[country].times)
@@ -66,9 +66,7 @@ function makeComparisonChart (countries, property, title) {
     countries = _.sortBy(countries, country => -_.last(dataByKey[country]))
     let finalCountries = []
     for (let country of countries) {
-        if (_.some(dataByKey[country], x => !_.isNil(x))) {
-            finalCountries.push(country)
-        }
+        finalCountries.push(country)
     }
     finalCountries.push('GDP')
     dataByKey.GDP = _.map(times, t => 100)
@@ -86,6 +84,34 @@ function makeComparisonChart (countries, property, title) {
         renderHook: random(),
     }
 }
+
+function makeUsdComparisonChart (countries, property, title) {
+    let times = []
+    for (let country of countries) {
+        times = _.concat(times, dataByCountry[country].times)
+    }
+    times = _.sortBy(_.uniq(times))
+    let dataByKey = getCountryProperty(countries, property, times)
+    countries = _.sortBy(countries, country => -_.last(dataByKey[country]))
+    let finalCountries = []
+    for (let country of countries) {
+        finalCountries.push(country)
+    }
+    return {
+        title: `${title}`,
+        markdown: '',
+        keys: finalCountries,
+        times: times,
+        dataByKey: dataByKey,
+        ymin: 0,
+        xmin: 1990,
+        xmax: _.max(times),
+        xlabel: 'Year',
+        ylabel: 'USD',
+        renderHook: random(),
+    }
+}
+
 
 const selectedCountries = [
     'Australia',
@@ -132,30 +158,50 @@ export default {
                 'country'
             )
             this.charts = [
-                makeComparisonChart(
+                makeGdpComparisonChart(
                     selectedCountries,
                     'householdDebtPercent',
                     'Household (mostly Housing) Debt'
                 ),
-                makeComparisonChart(
+                makeGdpComparisonChart(
                     selectedCountries,
                     'commercialDebtPercent',
                     'Commercial Debt'
                 ),
-                makeComparisonChart(
+                makeGdpComparisonChart(
                     selectedCountries,
                     'publicDebtPercent',
                     'Public Debt'
                 ),
-                makeComparisonChart(
+                makeGdpComparisonChart(
                     selectedCountries,
                     'privateDebtPercent',
                     'Private Debt (Commercial & Household)'
                 ),
-                makeComparisonChart(
+                makeGdpComparisonChart(
                     selectedCountries,
                     'allDebtPercent',
-                    'All Debt'
+                    'Combined Debt'
+                ),
+                makeUsdComparisonChart(
+                    selectedCountries,
+                    'privateDebtUsd',
+                    'Private Debt in USD'
+                ),
+                makeUsdComparisonChart(
+                    selectedCountries,
+                    'householdDebtUsd',
+                    'Household Debt in USD'
+                ),
+                makeUsdComparisonChart(
+                    selectedCountries,
+                    'commercialDebtUsd',
+                    'Commercial Debt in USD'
+                ),
+                makeUsdComparisonChart(
+                    selectedCountries,
+                    'publicDebtUsd',
+                    'Public Debt in USD'
                 ),
             ]
             for (let chart of this.charts) {
@@ -166,8 +212,11 @@ export default {
                 chart.options.plugins.legend.position = 'right'
 
                 let dataset = _.find(chart.data.datasets, {label: 'GDP'})
-                dataset.borderWidth = 8
-                dataset.borderColor = '#333333' + '33'
+                if (dataset) {
+                    dataset.borderWidth = 8
+                    dataset.borderColor = '#333333' + '33'
+                    dataset.backgroundColor = '#333333' + '33'
+                }
             }
             this.renderHook = random()
         },

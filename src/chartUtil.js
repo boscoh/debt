@@ -143,31 +143,34 @@ export function assignTimeSeriesDataToChart(chart, times, dataByKey) {
 
     const keys = _.get(chart, 'keys', [])
     let biggest = 0
-    chart.data = {
-        datasets: _.map(keys, key => {
-            let dataset = buildDataset(
-                key,
-                times,
-                dataByKey[key],
-                getColor(key)
-            )
-            if (chart.isUp) {
-                dataset.fill = 'origin'
-                dataset.borderWidth = 1
-                dataset.backgroundColor = dataset.borderColor + '44'
-            }
-            if (chart.isSymmetryY) {
-                let maxV = _.max(dataByKey[key])
-                let minV = _.min(dataByKey[key])
-                biggest = _.max([
-                    Math.abs(maxV),
-                    Math.abs(minV),
-                    biggest,
-                ])
-            }
-            return dataset
-        }),
+    let datasets = []
+    for (let key of keys) {
+        let dataset = buildDataset(
+            key,
+            times,
+            dataByKey[key],
+            getColor(key)
+        )
+        if (_.every(dataByKey[key], _.isNil)) {
+            dataset.label += " [NO DATA]"
+        }
+        if (chart.isUp) {
+            dataset.fill = 'origin'
+            dataset.borderWidth = 1
+            dataset.backgroundColor = dataset.borderColor + '44'
+        }
+        if (chart.isSymmetryY) {
+            let maxV = _.max(dataByKey[key])
+            let minV = _.min(dataByKey[key])
+            biggest = _.max([
+                Math.abs(maxV),
+                Math.abs(minV),
+                biggest,
+            ])
+        }
+        datasets.push(dataset)
     }
+    chart.data = {datasets}
     if (chart.isSymmetryY) {
         chart.options.scales.yAxis.max = biggest
         chart.options.scales.yAxis.min = -biggest

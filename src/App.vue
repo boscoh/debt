@@ -21,7 +21,7 @@
 
 <script setup>
 import modelMenu from './components/DropdownMenu.vue'
-document.title = 'National Debt Data-Viz'
+document.title = 'Data Visualisation of National Debt'
 </script>
 
 <style>

@@ -8,7 +8,6 @@ import countryLayouts from './countries/index'
 const routes = [
     {
         path: '/',
-        name: 'Home',
         component: Home,
     },
 ]
@@ -16,7 +15,6 @@ const routes = [
 for (let c of countryLayouts) {
     routes.push({
         path: c.path,
-        name: c.name,
         component: CountryCharts,
         props: { name: c.name },
     })

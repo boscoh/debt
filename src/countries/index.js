@@ -119,6 +119,28 @@ function makeCountryLayout(country) {
                 xlabel: 'Year',
                 ylabel: currency,
             },
+            {
+                title: `GDP per Capita (${currency})`,
+                markdown: '',
+                keys: ['gdpPerCapita'],
+                isUp: true,
+                xmin,
+                xmax,
+                ymin: 0,
+                xlabel: 'Year',
+                ylabel: currency,
+            },
+            {
+                title: `ΔGDP per Capita (${currency})`,
+                markdown: '',
+                keys: ['gdpChangePerCapita'],
+                isUp: true,
+                isSymmetryY: true,
+                xmin,
+                xmax,
+                xlabel: 'Year',
+                ylabel: currency,
+            },
         ],
     }
 }
