@@ -41,6 +41,12 @@ function getCountryProperty (countries, property, times) {
     for (let country of countries) {
         let timeValue = {}
         let countryTimes = dataByCountry[country].times
+        if (!(property in dataByCountry[country])) {
+            const availableProps = Object.keys(dataByCountry[country]).filter(k => k !== 'times').sort()
+            console.error(`Property '${property}' not found in data for country '${country}'. Available properties: ${availableProps.join(', ')}`)
+            timeValueByCountry[country] = timeValue
+            continue
+        }
         let values = dataByCountry[country][property]
         for (let [t, v] of _.zip(countryTimes, values)) {
             timeValue[t] = v
@@ -169,77 +175,45 @@ export default {
                 _.filter(this.checkBoxes, c => c.checked),
                 'country'
             )
-            this.charts = [
-                makeGdpComparisonChart(
-                    selectedCountries,
-                    'householdDebtPercent',
-                    'Household (mostly Housing) Debt'
-                ),
-                makeGdpComparisonChart(
-                    selectedCountries,
-                    'commercialDebtPercent',
-                    'Commercial Debt'
-                ),
-                makeGdpComparisonChart(
-                    selectedCountries,
-                    'publicDebtPercent',
-                    'Public Debt'
-                ),
-                makeGdpComparisonChart(
-                    selectedCountries,
-                    'privateDebtPercent',
-                    'Private Debt (Commercial & Household)'
-                ),
-                makeGdpComparisonChart(
-                    selectedCountries,
-                    'allDebtPercent',
-                    'Combined Debt'
-                ),
-                makeUsdComparisonChart(
-                    selectedCountries,
-                    'privateDebtUsd',
-                    'Private Debt in USD'
-                ),
-                makeUsdComparisonChart(
-                    selectedCountries,
-                    'householdDebtUsd',
-                    'Household Debt in USD'
-                ),
-                makeUsdComparisonChart(
-                    selectedCountries,
-                    'commercialDebtUsd',
-                    'Commercial Debt in USD'
-                ),
-                makeUsdComparisonChart(
-                    selectedCountries,
-                    'publicDebtUsd',
-                    'Public Debt in USD'
-                ),
-                makeUsdComparisonChart(
-                    selectedCountries,
-                    'gdpUsd',
-                    'GDP in USD'
-                ),
-                makeUsdComparisonChart(
-                    selectedCountries,
-                    'gdpPerCapitaUsd',
-                    'GDP per Capita in USD'
-                ),
+            
+            const chartConfigs = [
+                { fn: makeGdpComparisonChart, args: [selectedCountries, 'householdDebtPercent', 'Household (mostly Housing) Debt'] },
+                { fn: makeGdpComparisonChart, args: [selectedCountries, 'commercialDebtPercent', 'Commercial Debt'] },
+                { fn: makeGdpComparisonChart, args: [selectedCountries, 'publicDebtPercent', 'Public Debt'] },
+                { fn: makeGdpComparisonChart, args: [selectedCountries, 'privateDebtPercent', 'Private Debt (Commercial & Household)'] },
+                { fn: makeGdpComparisonChart, args: [selectedCountries, 'allDebtPercent', 'Combined Debt'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'privateDebt', 'Private Debt'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'householdDebt', 'Household Debt'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'commercialDebt', 'Commercial Debt'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'publicDebt', 'Public Debt'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'gdp', 'GDP'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'gdpPerCapita', 'GDP per Capita'] },
             ]
-            for (let chart of this.charts) {
-                let times = chart.times
-                let dataByKey = chart.dataByKey
-                assignTimeSeriesDataToChart(chart, times, dataByKey)
+            
+            this.charts = []
+            
+            for (let config of chartConfigs) {
+                try {
+                    const chart = config.fn(...config.args)
+                    const times = chart.times
+                    const dataByKey = chart.dataByKey
+                    assignTimeSeriesDataToChart(chart, times, dataByKey)
 
-                chart.options.plugins.legend.position = 'right'
+                    chart.options.plugins.legend.position = 'right'
 
-                let dataset = _.find(chart.data.datasets, {label: 'GDP'})
-                if (dataset) {
-                    dataset.borderWidth = 8
-                    dataset.borderColor = '#333333' + '33'
-                    dataset.backgroundColor = '#333333' + '33'
+                    const dataset = _.find(chart.data.datasets, {label: 'GDP'})
+                    if (dataset) {
+                        dataset.borderWidth = 8
+                        dataset.borderColor = '#333333' + '33'
+                        dataset.backgroundColor = '#333333' + '33'
+                    }
+                    
+                    this.charts.push(chart)
+                } catch (error) {
+                    console.error(`Failed to create chart "${config.args[2]}":`, error)
                 }
             }
+            
             this.renderHook = random()
         },
     },
