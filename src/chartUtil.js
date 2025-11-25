@@ -17,6 +17,7 @@ export const defaultOptions = {
             enabled: true,
             mode: 'index',
             intersect: false,
+            usePointStyle: true
         },
     },
     responsive: true,
@@ -81,7 +82,7 @@ const millifyNames = ['', 'k', 'm', 'b', 't']
 export function millify(value) {
     let isPositive = value > 0
     value = Math.abs(parseFloat(value))
-    let i = Math.floor(value == 0 ? 0 : Math.log10(Math.abs(value)) / 3)
+    let i = Math.floor(value === 0 ? 0 : Math.log10(Math.abs(value)) / 3)
     i = _.parseInt(i)
     const iLast = millifyNames.length - 1
     i = Math.max(0, Math.min(iLast, i))

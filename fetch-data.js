@@ -2,6 +2,7 @@ const _ = require('lodash')
 const fetch = require('node-fetch')
 const fs = require('fs')
 const XLSX = require('xlsx')
+const { parse } = require('csv-parse/sync')
 
 async function downloadFile (url, fname) {
     console.log(`Download ${url}`)
@@ -10,10 +11,10 @@ async function downloadFile (url, fname) {
     fs.writeFileSync(fname, buffer)
 }
 
+/**
+ * Functional 0-index wrapper over XLSX objects
+ */
 class SimpleXLS {
-    /*
-     * Functional 0-index wrapper over XLSX objects
-     */
     constructor (fname, sheetName) {
         this.workbook = XLSX.readFile(fname, {cellDates: true})
         this.sheet = this.workbook.Sheets[sheetName]
@@ -57,11 +58,12 @@ function expandValues (aList, n) {
     return result
 }
 
-/*
- * @return {
- *    <country>: list<float> - population by time
- *    time: list<float> - year converted to decimal for quarterly series
- * }
+/**
+ * @return {{
+ *     country1: number[],
+ *     country2: number[],
+ *     time: number
+ * }}
  */
 function getPopulationByCountry (xlsFname) {
     let xls = new SimpleXLS(xlsFname, 'Data')
@@ -149,10 +151,15 @@ class BisXls extends SimpleXLS {
         return _.uniq(_.map(headers, c => _.trim(c.split('-')[0])))
     }
 
-    findIColInHeader (patterns) {
+    /**
+     * Find the header that contains all the strings in the pattern
+     * @param patternStrings {string[]}
+     * @returns {null|number}
+     */
+    findIColInHeader (patternStrings) {
         for (let iCol of _.range(this.nCol)) {
             let v = this.getCell(iCol, 0)
-            if (_.every(patterns, p => _.includes(v, p))) {
+            if (_.every(patternStrings, p => _.includes(v, p))) {
                 return iCol
             }
         }
@@ -278,13 +285,13 @@ class BisXls extends SimpleXLS {
     }
 
     /**
-     * @param country - str
-     * @returns - {
-     *    time: [float] - 1990, 1990.25 etc.
-     *    gdp: [float]
-     *    gdpPercent: [float] - values 0-100
-     *    <other>
-     * }
+     * @param country {string}
+     * @returns {{
+     *    time: [number],
+     *    gdp: [number],
+     *    gdpPercent: [number],
+     *    moreProperty: [number],
+     * }}
      */
     getCountry (country) {
         let r = this.getCountryData(country)
@@ -328,6 +335,279 @@ class BisXls extends SimpleXLS {
         )
         return r
     }
+}
+
+/**
+ * Parse new BIS CSV format (SDMX columnar format)
+ * @return {{country1: object, country2: object}}
+ */
+function getDebtByCountryCsv (csvFname) {
+    console.log(`Reading CSV file ${csvFname}`)
+    const fileContent = fs.readFileSync(csvFname, 'utf-8')
+    const records = parse(fileContent, {
+        columns: true,
+        skip_empty_lines: true
+    })
+    
+    const result = {}
+    const countryData = {}
+    
+    // Group records by country
+    for (let record of records) {
+        const country = record['Borrowers\' country']
+        const sector = record['Borrowing sector']
+        const unitType = record['Unit type']
+        const valuation = record['Valuation method']
+        const adjustment = record['Adjustment']
+        const measure = record['Unit of measure']
+        
+        if (!country) continue
+        
+        if (!countryData[country]) {
+            countryData[country] = {}
+        }
+        
+        // Create a key for this time series based on dimensions
+        let key = `${sector}|${valuation}|${unitType}|${measure}|${adjustment}`
+        
+        if (!countryData[country][key]) {
+            countryData[country][key] = {
+                sector,
+                valuation,
+                unitType,
+                measure,
+                adjustment,
+                record
+            }
+        }
+    }
+    
+    // Process each country
+    for (let country of _.keys(countryData)) {
+        let countryInfo = countryData[country]
+        let countryResult = {}
+        
+        // Extract time series for different metrics
+        const toBillions = d => {
+            if (_.isNil(d) || d === '') return null
+            let num = parseFloat(d)
+            return isNaN(num) ? null : num * 1e9
+        }
+        
+        const identity = d => {
+            if (_.isNil(d) || d === '') return null
+            let num = parseFloat(d)
+            return isNaN(num) ? null : num
+        }
+        
+        // Find and extract relevant time series
+        for (let [key, info] of _.entries(countryInfo)) {
+            const record = info.record
+            const sector = info.sector
+            const valuation = info.valuation
+            const measure = info.measure
+            const adjustment = info.adjustment
+            
+            // Extract time series data (columns that look like dates)
+            let timeSeries = {}
+            let times = []
+            
+            for (let [col, val] of _.entries(record)) {
+                // Skip metadata columns
+                if (['FREQ', 'Frequency', 'BORROWERS_CTY', 'Borrowers\' country', 
+                     'TC_BORROWERS', 'Borrowing sector', 'TC_LENDERS', 'Lending sector',
+                     'VALUATION', 'Valuation method', 'UNIT_TYPE', 'Unit type',
+                     'TC_ADJUST', 'Adjustment', 'UNIT_MULT', 'Unit Multiplier',
+                     'UNIT_MEASURE', 'Unit of measure', 'TITLE_TS', 'Series'].includes(col)) {
+                    continue
+                }
+                
+                // Parse date format like "2023-Q4"
+                if (/^\d{4}-Q[1-4]$/.test(col)) {
+                    times.push(col)
+                    timeSeries[col] = val
+                }
+            }
+            
+            // Map time series to metrics based on sector, valuation, and measure
+            if (sector === 'Private non-financial sector' && 
+                valuation === 'Market value' && 
+                adjustment === 'Adjusted for breaks') {
+                
+                if (measure === 'New Zealand dollar' || measure === 'Euro' || measure === 'US dollar' ||
+                    measure === 'Japanese yen' || measure === 'British pound' || measure === 'Canadian dollar' ||
+                    measure === 'Australian dollar' || measure === 'Swiss franc' || measure === 'Swedish krona' ||
+                    measure === 'Norwegian krone' || measure === 'Danish krone' || measure === 'Polish zloty' ||
+                    measure === 'Mexican peso' || measure === 'Brazilian real' || measure === 'Chinese yuan' ||
+                    measure === 'Indian rupee' || measure === 'Malaysian ringgit' || measure === 'Singapore dollar' ||
+                    measure === 'Hong Kong dollar' || measure === 'Thai baht' || measure === 'South African rand' ||
+                    measure === 'Russian ruble' || measure === 'Saudi riyal' || measure === 'Turkish lira') {
+                    // Domestic currency in billions
+                    if (!countryResult.privateDebt) {
+                        countryResult.privateDebt = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
+                } else if (measure === 'US dollar') {
+                    // USD currency in billions (already in billions)
+                    if (!countryResult.privateDebtUsd) {
+                        countryResult.privateDebtUsd = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
+                } else if (measure === 'Per cent') {
+                    // Percentage of GDP
+                    if (!countryResult.privateDebtPercent) {
+                        countryResult.privateDebtPercent = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) : null
+                        })
+                    }
+                }
+            } else if (sector === 'General government' && 
+                       valuation === 'Market value' && 
+                       adjustment === 'Adjusted for breaks') {
+                
+                if (measure !== 'Per cent' && measure !== 'US dollar') {
+                    // Domestic currency
+                    if (!countryResult.publicDebt) {
+                        countryResult.publicDebt = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
+                } else if (measure === 'US dollar') {
+                    if (!countryResult.publicDebtUsd) {
+                        countryResult.publicDebtUsd = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
+                } else if (measure === 'Per cent') {
+                    if (!countryResult.publicDebtPercent) {
+                        countryResult.publicDebtPercent = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) : null
+                        })
+                    }
+                }
+            } else if (sector === 'Households & NPISHs' && 
+                       valuation === 'Market value' && 
+                       adjustment === 'Adjusted for breaks') {
+                
+                if (measure !== 'Per cent' && measure !== 'US dollar') {
+                    // Domestic currency
+                    if (!countryResult.householdDebt) {
+                        countryResult.householdDebt = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
+                } else if (measure === 'US dollar') {
+                    if (!countryResult.householdDebtUsd) {
+                        countryResult.householdDebtUsd = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
+                } else if (measure === 'Per cent') {
+                    if (!countryResult.householdDebtPercent) {
+                        countryResult.householdDebtPercent = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) : null
+                        })
+                    }
+                }
+            }
+        }
+        
+        // Convert quarter dates to time format
+        if (countryData[country][_.keys(countryData[country])[0]]) {
+            let firstRecord = countryData[country][_.keys(countryData[country])[0]].record
+            let times = []
+            for (let col of _.keys(firstRecord)) {
+                if (/^\d{4}-Q[1-4]$/.test(col)) {
+                    times.push(col)
+                }
+            }
+            
+            countryResult.times = _.map(times, t => {
+                let parts = t.split('-Q')
+                let year = parseInt(parts[0])
+                let quarter = parseInt(parts[1])
+                return year + (quarter - 1) / 4
+            })
+        }
+        
+        // Apply same post-processing as Excel version
+        if (countryResult.times && countryResult.times.length > 0) {
+            countryResult = removeBlankValues(countryResult)
+            // Apply the same computed fields
+            if (countryResult.privateDebt && countryResult.householdDebt) {
+                countryResult.commercialDebt = combine(
+                    countryResult.privateDebt,
+                    countryResult.householdDebt,
+                    (a, b) => a - b
+                )
+            }
+            if (countryResult.privateDebt && countryResult.privateDebtPercent) {
+                countryResult.gdp = combine(
+                    countryResult.privateDebt,
+                    countryResult.privateDebtPercent,
+                    (a, b) => (a / b) * 100
+                )
+            }
+            if (countryResult.privateDebtUsd && countryResult.privateDebtPercent) {
+                countryResult.gdpUsd = combine(
+                    countryResult.privateDebtUsd,
+                    countryResult.privateDebtPercent,
+                    (a, b) => (a / b) * 100
+                )
+            }
+            if (countryResult.gdp) {
+                countryResult.gdpPercent = _.map(countryResult.times, t => 100)
+            }
+            if (countryResult.commercialDebt && countryResult.gdp) {
+                countryResult.commercialDebtPercent = combine(
+                    countryResult.commercialDebt,
+                    countryResult.gdp,
+                    (a, b) => (a / b) * 100
+                )
+            }
+            if (countryResult.gdp) {
+                countryResult.gdpChange = diff(countryResult.gdp)
+            }
+            if (countryResult.privateDebtPercent && countryResult.publicDebtPercent) {
+                countryResult.allDebtPercent = combine(
+                    countryResult.privateDebtPercent,
+                    countryResult.publicDebtPercent,
+                    (a, b) => a + b
+                )
+            }
+            if (countryResult.privateDebtPercent) {
+                countryResult.creditPercent = diff(countryResult.privateDebtPercent)
+            }
+            if (countryResult.privateDebt) {
+                countryResult.credit = diff(countryResult.privateDebt)
+            }
+            if (countryResult.gdpChange && countryResult.credit) {
+                countryResult.keenGrowth = combine(countryResult.gdpChange, countryResult.credit, (a, b) => a + b)
+            }
+            if (countryResult.privateDebtUsd && countryResult.householdDebtUsd) {
+                countryResult.commercialDebtUsd = combine(
+                    countryResult.privateDebtUsd,
+                    countryResult.householdDebtUsd,
+                    (a, b) => a - b
+                )
+            }
+            
+            result[country] = countryResult
+        }
+    }
+    
+    return result
 }
 
 function getDebtByCountry (xlsxFname) {
@@ -377,17 +657,72 @@ async function run () {
     const populationUrl =
         'https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel'
     const populationXls = './src/countries/worldbank.pop.xls'
-    await downloadFile(populationUrl, populationXls)
-    const populationData = getPopulationByCountry(populationXls)
+    try {
+        await downloadFile(populationUrl, populationXls)
+        const populationData = getPopulationByCountry(populationXls)
+        const populationJson = './src/countries/population.json'
+        fs.writeFileSync(populationJson, JSON.stringify(populationData))
+        console.log(`Save ${populationJson}`)
+    } catch (err) {
+        console.error('Warning: Could not download population data from World Bank:', err.message)
+        console.log('Using existing population.json')
+    }
 
+    // Download from new BIS data portal
+    // Available at https://data.bis.org/bulkdownload
+    const debtUrl = 'https://data.bis.org/static/bulk/WS_TC_csv_col.zip'
+    const debtZip = './src/countries/totcredit.zip'
+    await downloadFile(debtUrl, debtZip)
+    
+    // Extract and read the CSV file from the zip
+    const path = require('path')
+    const extract = require('extract-zip')
+    const extractDir = path.resolve('./src/countries/totcredit_extracted')
+    try {
+        await extract(debtZip, { dir: extractDir })
+        console.log('Extracted zip file')
+    } catch (err) {
+        console.error('Error extracting zip:', err)
+        throw err
+    }
+    
+    // Check what files are in the extracted directory
+    const files = fs.readdirSync(extractDir)
+    console.log('Files in extracted directory:', files)
+    
+    let debtData = {}
+    
+    // Try to parse CSV first (new format)
+    const csvFiles = files.filter(f => f.endsWith('.csv'))
+    if (csvFiles.length > 0) {
+        try {
+            const csvFile = `${extractDir}/${csvFiles[0]}`
+            console.log(`Using new CSV format: ${csvFile}`)
+            debtData = getDebtByCountryCsv(csvFile)
+        } catch (err) {
+            console.error('Error parsing CSV format, trying Excel format:', err.message)
+            // Fall back to Excel if CSV parsing fails
+            debtData = null
+        }
+    }
+    
+    // Fall back to Excel format (old format) if CSV parsing failed or no CSV found
+    if (_.isEmpty(debtData)) {
+        console.log('Using legacy Excel format')
+        let debtXlsx = './src/countries/totcredit.xlsx'
+        if (!fs.existsSync(debtXlsx)) {
+            // Try to find Excel file in extracted directory
+            const xlsxFiles = files.filter(f => f.endsWith('.xlsx'))
+            if (xlsxFiles.length > 0) {
+                debtXlsx = `${extractDir}/${xlsxFiles[0]}`
+            } else {
+                throw new Error('No XLSX file found in extracted data')
+            }
+        }
+        debtData = getDebtByCountry(debtXlsx)
+    }
+    
     const populationJson = './src/countries/population.json'
-    fs.writeFileSync(populationJson, JSON.stringify(populationData))
-    console.log(`Save ${populationJson}`)
-
-    const debtUrl = 'https://www.bis.org/statistics/totcredit/totcredit.xlsx'
-    const debtXlsx = './src/countries/totcredit.xlsx'
-    await downloadFile(debtUrl, debtXlsx)
-    let debtData = getDebtByCountry(debtXlsx)
     addPopulation(debtData, populationJson)
 
     const dataJson = './src/countries/data.json'
