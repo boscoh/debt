@@ -434,23 +434,7 @@ function getDebtByCountryCsv (csvFname) {
                 valuation === 'Market value' && 
                 adjustment === 'Adjusted for breaks') {
                 
-                if (measure === 'New Zealand dollar' || measure === 'Euro' || measure === 'US dollar' ||
-                    measure === 'Japanese yen' || measure === 'British pound' || measure === 'Canadian dollar' ||
-                    measure === 'Australian dollar' || measure === 'Swiss franc' || measure === 'Swedish krona' ||
-                    measure === 'Norwegian krone' || measure === 'Danish krone' || measure === 'Polish zloty' ||
-                    measure === 'Mexican peso' || measure === 'Brazilian real' || measure === 'Chinese yuan' ||
-                    measure === 'Indian rupee' || measure === 'Malaysian ringgit' || measure === 'Singapore dollar' ||
-                    measure === 'Hong Kong dollar' || measure === 'Thai baht' || measure === 'South African rand' ||
-                    measure === 'Russian ruble' || measure === 'Saudi riyal' || measure === 'Turkish lira') {
-                    // Domestic currency in billions
-                    if (!countryResult.privateDebt) {
-                        countryResult.privateDebt = _.map(times, t => {
-                            let v = timeSeries[t]
-                            return v ? parseFloat(v) * 1e9 : null
-                        })
-                    }
-                } else if (measure === 'US dollar') {
-                    // USD currency in billions (already in billions)
+                if (measure === 'US dollar') {
                     if (!countryResult.privateDebtUsd) {
                         countryResult.privateDebtUsd = _.map(times, t => {
                             let v = timeSeries[t]
@@ -458,11 +442,24 @@ function getDebtByCountryCsv (csvFname) {
                         })
                     }
                 } else if (measure === 'Per cent') {
-                    // Percentage of GDP
                     if (!countryResult.privateDebtPercent) {
                         countryResult.privateDebtPercent = _.map(times, t => {
                             let v = timeSeries[t]
                             return v ? parseFloat(v) : null
+                        })
+                    }
+                } else if (measure === 'New Zealand dollar' || measure === 'Euro' ||
+                    measure === 'Japanese yen' || measure === 'British pound' || measure === 'Canadian dollar' ||
+                    measure === 'Australian dollar' || measure === 'Swiss franc' || measure === 'Swedish krona' ||
+                    measure === 'Norwegian krone' || measure === 'Danish krone' || measure === 'Polish zloty' ||
+                    measure === 'Mexican peso' || measure === 'Brazilian real' || measure === 'Chinese yuan' ||
+                    measure === 'Indian rupee' || measure === 'Malaysian ringgit' || measure === 'Singapore dollar' ||
+                    measure === 'Hong Kong dollar' || measure === 'Thai baht' || measure === 'South African rand' ||
+                    measure === 'Russian ruble' || measure === 'Saudi riyal' || measure === 'Turkish lira') {
+                    if (!countryResult.privateDebt) {
+                        countryResult.privateDebt = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
                         })
                     }
                 }
@@ -470,15 +467,7 @@ function getDebtByCountryCsv (csvFname) {
                        valuation === 'Market value' && 
                        adjustment === 'Adjusted for breaks') {
                 
-                if (measure !== 'Per cent' && measure !== 'US dollar') {
-                    // Domestic currency
-                    if (!countryResult.publicDebt) {
-                        countryResult.publicDebt = _.map(times, t => {
-                            let v = timeSeries[t]
-                            return v ? parseFloat(v) * 1e9 : null
-                        })
-                    }
-                } else if (measure === 'US dollar') {
+                if (measure === 'US dollar') {
                     if (!countryResult.publicDebtUsd) {
                         countryResult.publicDebtUsd = _.map(times, t => {
                             let v = timeSeries[t]
@@ -492,20 +481,19 @@ function getDebtByCountryCsv (csvFname) {
                             return v ? parseFloat(v) : null
                         })
                     }
+                } else if (measure !== 'Per cent' && measure !== 'US dollar') {
+                    if (!countryResult.publicDebt) {
+                        countryResult.publicDebt = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
+                        })
+                    }
                 }
             } else if (sector === 'Households & NPISHs' && 
                        valuation === 'Market value' && 
                        adjustment === 'Adjusted for breaks') {
                 
-                if (measure !== 'Per cent' && measure !== 'US dollar') {
-                    // Domestic currency
-                    if (!countryResult.householdDebt) {
-                        countryResult.householdDebt = _.map(times, t => {
-                            let v = timeSeries[t]
-                            return v ? parseFloat(v) * 1e9 : null
-                        })
-                    }
-                } else if (measure === 'US dollar') {
+                if (measure === 'US dollar') {
                     if (!countryResult.householdDebtUsd) {
                         countryResult.householdDebtUsd = _.map(times, t => {
                             let v = timeSeries[t]
@@ -517,6 +505,13 @@ function getDebtByCountryCsv (csvFname) {
                         countryResult.householdDebtPercent = _.map(times, t => {
                             let v = timeSeries[t]
                             return v ? parseFloat(v) : null
+                        })
+                    }
+                } else if (measure !== 'Per cent' && measure !== 'US dollar') {
+                    if (!countryResult.householdDebt) {
+                        countryResult.householdDebt = _.map(times, t => {
+                            let v = timeSeries[t]
+                            return v ? parseFloat(v) * 1e9 : null
                         })
                     }
                 }
