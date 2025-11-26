@@ -1,82 +1,158 @@
-# Data Visualisation of National Debt
+# International Debt Visualization
 
-Running visualization <https://boscoh.com/debt>
+An interactive web application for visualizing and comparing national debt levels across countries over time. This project provides historical data on public and private debt, GDP, and related economic indicators from 48 countries.
+
+**Live Demo:** <https://boscoh.com/debt>
+
+## About
+
+This visualization tool helps understand long-term debt trends by comparing:
+
+- **Private Debt** (household and commercial debt)
+- **Public Debt** (government debt)
+- **GDP** and GDP per capita
+- Historical trends from 1940s to present
+
+The project draws on economic research showing that private debt levels are a key driver of economic cycles and financial crises. By making this data accessible and visual, the tool helps identify patterns and trends across different countries and time periods.
 
 ## Quick Start
 
-    npm install
+### Installation
 
-Run dev server
+```bash
+npm install
+```
 
-    npm run dev
+### Development
 
-Build production SPA in `dist`:
+Run the development server:
 
-    npm run build
+```bash
+npm run dev
+```
 
-## Refresh data
+Visit `http://localhost:3000` to view the application.
 
-The data is pulled in from the Bank of International Settlement and the World Bank:
+### Production Build
 
-    node fetch-data.cjs
+Build the production Single Page Application in `dist/`:
 
-This will build `src/countries/population.json`, which has population data, and
-`src/countries/data.json` which has all the debt data.
+```bash
+npm run build
+```
 
-### Primary Data Sources
+## Data Pipeline
 
-**Debt Data:**
-- Bank of International Settlements (BIS) - Total Credit Statistics
+### Refreshing Data
+
+To update with the latest data from BIS and World Bank:
+
+```bash
+node fetch-data.cjs
+```
+
+This script:
+1. Downloads population data from World Bank → `src/countries/population.json`
+2. Downloads debt statistics from BIS → extracts and processes CSV
+3. Calculates derived metrics (commercial debt, GDP, per capita values)
+4. Generates `src/countries/data.json` with all processed data
+
+### Data Sources
+
+**Primary Data:**
+
+- **Bank of International Settlements (BIS)** - Total Credit Statistics
   - Main page: <https://www.bis.org/statistics/about_credit_stats.htm?m=6%7C380>
-  - Bulk download portal: <https://data.bis.org/bulkdownload>
-  - Direct download: <https://data.bis.org/static/bulk/WS_TC_csv_col.zip>
-  - Format: CSV (SDMX columnar format)
+  - Bulk download: <https://data.bis.org/bulkdownload>
+  - Direct URL: <https://data.bis.org/static/bulk/WS_TC_csv_col.zip>
+  - Provides: Private debt, public debt, household debt (% of GDP and absolute values)
 
-**Population Data:**
-- World Bank - Population Indicator (SP.POP.TOTL)
-  - API URL: <https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel>
-  - Format: Excel
+- **World Bank** - Population Data (SP.POP.TOTL)
+  - API: <https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel>
+  - Provides: Annual population for per capita calculations
 
-### Useful Resources & Articles
+### Data Processing
 
-**Debt Analysis & Theory:**
-- Private Debt Project - "Are We Facing a Global Lost Decade?" 
-  - <https://privatedebtproject.org/pdp/view-articles.php?Are-We-Facing-a-Global-Lost-Decade-14>
-  - Analysis of private debt as a driver of economic cycles
+The raw data is processed to calculate additional metrics:
 
-**Country-Specific Data Sources:**
-- Reserve Bank of Australia (RBA) Statistics
-  - Statistical tables: <https://www.rba.gov.au/statistics/frequency/occ-paper-8.html#section_5>
-  - Historical GDP data: <https://www.rba.gov.au/statistics/tables/xls/h01hist.xls>
-- FRED (Federal Reserve Economic Data)
-  - Australia GDP: <https://fred.stlouisfed.org/series/AUSGDPNQDSMEI>
+- **Commercial Debt** = Private Debt - Household Debt
+- **GDP** = (Private Debt / Private Debt %) × 100
+- **Per Capita Values** = GDP / Population
+- **Growth Rates** = Period-over-period changes in debt and GDP
 
-**Additional Reference Sites:**
-- Country Economy: <https://countryeconomy.com/gdp/australia?year=2019>
-- Macrotrends: <https://www.macrotrends.net/countries/AUS/australia/gdp-growth-rate>
-- World Bank Indicators: <https://data.worldbank.org/indicator/FS.AST.PRVT.GD.ZS?locations=AU>
+All debt data is sourced from "All sectors" lending to avoid double-counting from individual lending sectors.
 
-## App architecture
+## Technical Stack
 
-- Vue 3 framework
-- plots with chart.js
-- UI and utility CSS from Bootstrap 5
-- spreadsheet analysis with sheet.js
-- currency from currency-symbol-map & country-codes-list 
+### Frontend
+- **Vue 3** - Reactive UI framework
+- **Chart.js** - Interactive time-series charts via `@j-t-mcc/vue3-chartjs`
+- **Bootstrap 5** - Responsive UI components and styling
+- **Vite** - Fast build tool and dev server
 
-## Data analysis
+### Data Processing
+- **Node.js** - Data fetching and processing
+- **SheetJS (xlsx)** - Excel file parsing
+- **csv-parse** - CSV parsing for BIS SDMX format
+- **Lodash** - Data manipulation utilities
 
-Debt, GDP and Debt percentages are taken from the Bank of International 
-Settlement. Debt is broken up into Public and Private debt. Household
-debt is considered one part of the Private debt, and Commercial Debt
-is calculated as the remainder.
+## Project Structure
 
-Changes in Debt, GDP etc. are calculated from this data.
+```
+debt/
+├── src/
+│   ├── components/
+│   │   ├── Home.vue           # Main comparison charts
+│   │   ├── CountryCharts.vue  # Individual country view
+│   │   └── DropdownMenu.vue   # Navigation
+│   ├── countries/
+│   │   ├── data.json          # Processed debt/GDP data
+│   │   └── population.json    # Population time series
+│   ├── chartUtil.js           # Chart configuration helpers
+│   └── main.js                # Vue app entry
+├── fetch-data.cjs             # Data pipeline script
+└── README.md
+```
 
-Per capita calculation uses population from the World Bank.
+## Understanding the Data
 
-## Data analysis
+### Debt Categories
 
-Javascript has sufficiently good tools for data-analysis from Excel spreadsheet
-sources, where the resultant JSON slots nicely into a front-end framework.
+**Private Debt** includes all credit to the non-financial private sector:
+- **Household Debt** - Mortgages and consumer credit
+- **Commercial Debt** - Business loans and corporate bonds
 
+**Public Debt** includes credit to general government at all levels.
+
+### Why Private Debt Matters
+
+Economic research (notably by economist Steve Keen) shows that changes in private debt are a major driver of economic demand. Rapid private debt growth can fuel booms, while debt reduction (deleveraging) can trigger recessions. This makes private debt levels a crucial economic indicator alongside traditional measures like GDP and unemployment.
+
+## Useful Resources
+
+### Economic Research & Analysis
+
+- **Private Debt Project** - Research on debt's role in economic cycles
+  - ["Are We Facing a Global Lost Decade?"](https://privatedebtproject.org/pdp/view-articles.php?Are-We-Facing-a-Global-Lost-Decade-14)
+
+### Additional Data Sources
+
+- **Reserve Bank of Australia (RBA)**
+  - [Statistical tables](https://www.rba.gov.au/statistics/frequency/occ-paper-8.html#section_5)
+  - [Historical GDP data](https://www.rba.gov.au/statistics/tables/xls/h01hist.xls)
+
+- **FRED (Federal Reserve Economic Data)**
+  - [Australia GDP](https://fred.stlouisfed.org/series/AUSGDPNQDSMEI)
+
+- **Other Resources**
+  - [Country Economy](https://countryeconomy.com/gdp/australia?year=2019)
+  - [Macrotrends](https://www.macrotrends.net/countries/AUS/australia/gdp-growth-rate)
+  - [World Bank Indicators](https://data.worldbank.org/indicator/FS.AST.PRVT.GD.ZS?locations=AU)
+
+## Contributing
+
+Data updates run quarterly as BIS releases new statistics. To contribute or report issues with data processing, please check the data pipeline logic in `fetch-data.cjs`.
+
+## License
+
+Data sources remain under their respective licenses (BIS and World Bank). Application code is provided as-is for educational and research purposes.
