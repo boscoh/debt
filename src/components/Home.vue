@@ -182,12 +182,14 @@ export default {
                 { fn: makeGdpComparisonChart, args: [selectedCountries, 'publicDebtPercent', 'Public Debt'] },
                 { fn: makeGdpComparisonChart, args: [selectedCountries, 'privateDebtPercent', 'Private Debt (Commercial & Household)'] },
                 { fn: makeGdpComparisonChart, args: [selectedCountries, 'allDebtPercent', 'Combined Debt'] },
-                { fn: makeUsdComparisonChart, args: [selectedCountries, 'privateDebt', 'Private Debt'] },
-                { fn: makeUsdComparisonChart, args: [selectedCountries, 'householdDebt', 'Household Debt'] },
-                { fn: makeUsdComparisonChart, args: [selectedCountries, 'commercialDebt', 'Commercial Debt'] },
-                { fn: makeUsdComparisonChart, args: [selectedCountries, 'publicDebt', 'Public Debt'] },
-                { fn: makeUsdComparisonChart, args: [selectedCountries, 'gdp', 'GDP'] },
-                { fn: makeUsdComparisonChart, args: [selectedCountries, 'gdpPerCapita', 'GDP per Capita'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'privateDebtUsd', 'Private Debt in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'householdDebtUsd', 'Household Debt in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'commercialDebtUsd', 'Commercial Debt in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'publicDebtUsd', 'Public Debt in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'gdpUsd', 'GDP in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'gdpPerCapitaUsd', 'GDP per Capita in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'householdDebtPerCapitaUsd', 'Household Debt per Capita in USD'] },
+                { fn: makeUsdComparisonChart, args: [selectedCountries, 'publicDebtPerCapitaUsd', 'Public Debt per Capita in USD'] },
             ]
             
             this.charts = []
