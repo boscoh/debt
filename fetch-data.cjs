@@ -539,6 +539,18 @@ function getDebtByCountryCsv (csvFname) {
         // Apply same post-processing as Excel version
         if (countryResult.times && countryResult.times.length > 0) {
             countryResult = removeBlankValues(countryResult)
+            
+            // For countries that only report in USD (like US), copy USD fields to domestic fields
+            if (!countryResult.privateDebt && countryResult.privateDebtUsd) {
+                countryResult.privateDebt = countryResult.privateDebtUsd
+            }
+            if (!countryResult.householdDebt && countryResult.householdDebtUsd) {
+                countryResult.householdDebt = countryResult.householdDebtUsd
+            }
+            if (!countryResult.publicDebt && countryResult.publicDebtUsd) {
+                countryResult.publicDebt = countryResult.publicDebtUsd
+            }
+            
             // Apply the same computed fields
             if (countryResult.privateDebt && countryResult.householdDebt) {
                 countryResult.commercialDebt = combine(
@@ -561,7 +573,7 @@ function getDebtByCountryCsv (csvFname) {
                     (a, b) => (a / b) * 100
                 )
             }
-            if (countryResult.gdp) {
+            if (countryResult.gdp || countryResult.gdpUsd) {
                 countryResult.gdpPercent = _.map(countryResult.times, t => 100)
             }
             if (countryResult.commercialDebt && countryResult.gdp) {
