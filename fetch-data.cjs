@@ -663,6 +663,16 @@ function addPopulation (dataByCountry, jsonFname) {
             countryData.population,
             (a, b) => a / b
         )
+        countryData.householdDebtPerCapitaUsd = combine(
+            countryData.householdDebtUsd,
+            countryData.population,
+            (a, b) => a / b
+        )
+        countryData.publicDebtPerCapitaUsd = combine(
+            countryData.publicDebtUsd,
+            countryData.population,
+            (a, b) => a / b
+        )
     }
 }
 
