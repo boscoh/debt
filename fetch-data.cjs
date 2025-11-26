@@ -356,12 +356,18 @@ function getDebtByCountryCsv (csvFname) {
     for (let record of records) {
         const country = record['Borrowers\' country']
         const sector = record['Borrowing sector']
+        const lendingSector = record['Lending sector']
         const unitType = record['Unit type']
         const valuation = record['Valuation method']
         const adjustment = record['Adjustment']
         const measure = record['Unit of measure']
         
         if (!country) continue
+        
+        // Only use data where lending sector is "All sectors" to get total credit
+        if (lendingSector !== 'All sectors') {
+            continue
+        }
         
         if (!countryData[country]) {
             countryData[country] = {}
